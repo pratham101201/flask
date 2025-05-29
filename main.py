@@ -5,6 +5,7 @@ from flask_cors import CORS
 import firebase_admin
 from firebase_admin import credentials, firestore, auth
 import os
+
 import json
 from datetime import datetime
 from functools import wraps
@@ -12,8 +13,7 @@ import base64
 from werkzeug.security import generate_password_hash, check_password_hash
 
 app = Flask(__name__)
-
-
+CORS(app, origins=["http://localhost:5173"])
 @app.route('/')
 def index():
     return jsonify({"Choo Choo": "Welcome to your Flask app 🚅"})
