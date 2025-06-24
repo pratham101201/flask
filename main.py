@@ -306,6 +306,36 @@ def get_job(job_id):
         return jsonify({'id': job_ref.id, **job_ref.to_dict()})
     except Exception as e:
         return jsonify({'message': 'Error fetching job', 'error': str(e)}), 500
+
+@app.route('/api/jobs', methods=['GET'])
+def search_jobs():
+    try:
+        keyword = request.args.get('keyword', '').strip().lower()
+        location = request.args.get('location', '').strip().lower()
+        category = request.args.get('category', '').strip().lower()
+
+        jobs_ref = db.collection('jobs')
+        query = jobs_ref.where('isActive', '==', True)
+
+        if location:
+            query = query.where('location', '==', location)
+        if category:
+            query = query.where('category', '==', category)
+
+        jobs = [{**doc.to_dict(), 'id': doc.id} for doc in query.stream()]
+
+        # Client-side partial keyword filtering
+        if keyword:
+            jobs = [
+                job for job in jobs
+                if keyword in job.get('title', '').lower()
+                or keyword in job.get('company', '').lower()
+                or keyword in job.get('description', '').lower()
+            ]
+
+        return jsonify(jobs)
+    except Exception as e:
+        return jsonify({'message': 'Error fetching jobs', 'error': str(e)}), 500
     
 @app.route('/api/users/<user_id>', methods=['DELETE'])
 @token_required
